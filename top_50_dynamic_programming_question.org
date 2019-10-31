@@ -1,0 +1,464 @@
+#+TITLE: Top 50 dynamic programming questions
+#+DESCRIPTION: Notes about dynamic programming
+#+PROPERTY: header-args:python :session py3.6
+#+PROPERTY: header-args :results output 
+#+PROPERTY: header-args+ :exports both
+
+
+* Setup Eval Env                                                   :noexport:
+  
+  #+begin_src elisp :session py3.6 :results silent :exports none
+    (pyvenv-activate "~/miniconda2/envs/py3.6")
+  #+end_src
+
+  #+RESULTS:
+
+  #+begin_src python :exports none
+    import sys
+    print(sys.version)
+  #+end_src
+
+  #+RESULTS:
+  : 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 12:04:33) 
+  : [GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]
+
+* Longest Common Subsequence
+  
+** Recursion
+  
+  注意 longest common subsequence 跟 substring 是不一樣的意思喔...，lc subsequence 是指，兩個string出現的最長的共同字母，可以不用連續，只要保證順序是一樣的就好。
+
+  #+begin_src python
+    def longgest_common_seq(str_one, str_two, n, m):
+        if n == 0 or m == 0:
+            return ''
+
+        if str_one[n-1] == str_two[m-1]:
+            return  longgest_common_seq(str_one, str_two, n-1, m-1) + str_one[n-1]
+
+        print(f'n, m: {n}, {m}')
+        pos_one_common = longgest_common_seq(str_one, str_two, n, m-1)
+        pos_two_common = longgest_common_seq(str_one, str_two, n-1, m)
+
+        if len(pos_one_common) > len(pos_two_common):
+            return pos_one_common
+        else:
+            return pos_two_common
+
+
+    a = 'abeecd'
+    b = 'bcd'
+
+    print(longgest_common_seq(a, b, len(a), len(b)))
+
+    a = 'abeecd'
+    b = 'bcd'
+
+    print(longgest_common_seq(b, a, len(b), len(a)))
+
+
+  #+end_src
+
+  #+RESULTS:
+  : n, m: 4, 1
+  : n, m: 3, 1
+  : bcd
+  : n, m: 1, 4
+  : n, m: 1, 3
+  : bcd
+  
+  上面的演算法效能最糟是 O(2^(m+n)) ，每次都會分成兩個 subroutine，直到 ~m == 0 or n == 0~ ，每次分都是 m-1, n-1 ，
+
+  #+begin_src python
+
+    a = 'ab'
+    b = 'fg'
+    print(longgest_common_seq(a, b, len(a), len(b)))
+  #+end_src
+  
+  #+RESULTS:
+  : n, m: 2, 2
+  : n, m: 2, 1
+  : n, m: 1, 1
+  : n, m: 1, 2
+  : n, m: 1, 1
+
+** Recursion + Memoize
+
+  再來這個當然可以優化來使用memoize玩玩看，動手前可以先來想想，這樣優化後，演算法效率應該是如何？ 由於不用重複計算可以直接lookup，所以會變成 recursive m->0, n->0 ，所以是 O(mn)
+
+  #+begin_src python
+
+    class Memoize:
+
+        def __init__(self, f):
+            self._cache = {}
+            self._f = f
+
+        def __call__(self, *args):
+            if args not in self._cache:
+                self._cache[args] = self._f(*args)
+
+            return self._cache[args]
+
+
+    a = 'ab'
+    b = 'fg'
+
+
+    @Memoize
+    def longgest_common_seq(str_one, str_two, n, m):
+          if n == 0 or m == 0:
+              return ''
+
+          if str_one[n-1] == str_two[m-1]:
+              return  longgest_common_seq(str_one, str_two, n-1, m-1) + str_one[n-1]
+
+          print(f'n, m: {n}, {m}')
+          pos_one_common = longgest_common_seq(str_one, str_two, n, m-1)
+          pos_two_common = longgest_common_seq(str_one, str_two, n-1, m)
+
+          if len(pos_one_common) > len(pos_two_common):
+              return pos_one_common
+          else:
+              return pos_two_common
+
+
+    print(longgest_common_seq(a, b, len(a), len(b)))
+  #+end_src
+
+  #+RESULTS:
+  : n, m: 2, 2
+  : n, m: 2, 1
+  : n, m: 1, 1
+  : n, m: 1, 2
+  
+這已經是目前效能最好的解法了，但是用recursive的問題就是會有maximum recursive restriction，因此大部分的人都會採取 bottom-up 解法，因為是用 iteration 所以就不會有 stack 大小的限制問題存在，但是有時候要用這種邏輯來思考時，就會變得比較難。
+
+** Iteration
+
+好啦熟悉的two dimensional array來了，先試著用白紙畫畫看。其實畫出來就會比較知道怎麼解了！
+
+#+begin_src python
+
+  def longest_common_seq_iter(a, b):
+      m = [[0 for _ in range(len(a))] for _ in range(len(b))]
+      result = ''
+
+      for i in range(len(b)):
+          for j in range(len(a)):
+              if a[j] == b[i]:
+                  if j-1 < 0 or i-1 < 0:
+                      m[i][j] = 1
+                  else:
+                      m[i][j] = m[i-1][j-1] + 1
+
+                  result += a[j]
+              else:
+                  if j-1 < 0:
+                      m[i][j] = m[i-1][j]
+                  elif i -1 < 0:
+                      m[i][j] = m[i][j-1]
+                  else:
+                      m[i][j] = max(m[i][j-1], m[i-1][j])
+                  # actually, here we can just write
+                  # m[i][j] = max(m[i][j-1], m[i-1][j])
+                  # because a[-1] is 0, we initial the array at first.
+
+      print(m)
+      print(f'content is: {result}')
+      return m[-1][-1]
+
+
+  a = 'abcbde'
+  b = 'bcd'
+  print(longest_common_seq_iter(a,b))
+
+#+end_src
+
+#+RESULTS:
+: [[0, 1, 1, 1, 1, 1], [0, 1, 2, 2, 2, 2], [0, 1, 2, 2, 3, 3]]
+: content is: bbcd
+: 3
+
+這個效能跟上面遞迴一樣是 O(nm) ，但是這個解法多了 space complexity O(mn)，我們是可以針對這個來做優化到 O(min(m, n))
+
+** Iteration with space optimization
+
+#+begin_src python
+
+  def longest_common_seq_iter_space_optimization(a, b):
+      # make the maximum space usage
+      if len(a) > len(b):
+          a, b = b, a
+
+      cur, prev = [0 for _ in range(len(a))], None
+
+      result = ''
+
+      for i in range(len(b)):
+          prev = cur[0]
+          for j in range(len(a)):
+              backup = cur[j]
+
+              if a[j] == b[i]:
+                  if j-1 < 0 or i-1 < 0:
+                      cur[j] = 1
+                  else:
+                      cur[j] = prev + 1
+
+                  result += a[j]
+              else:
+                  if j-1 < 0 :
+                      cur[j] = cur[j]
+                  elif i - 1 < 0:
+                      cur[j] = cur[j-1]
+                  else:
+                      cur[j] = max(cur[j], cur[j-1])
+
+              prev = backup
+
+      print(f'content is: {result}')
+      return cur[-1]
+
+  a = 'abcbde'
+  b = 'bcd'
+  print(longest_common_seq_iter_space_optimization(a,b))
+
+#+end_src
+
+#+RESULTS:
+: content is: bcbd
+: 3
+
+大致上很像只是差在說重複利用 cur 這個陣列，其實今天你也可以用兩個長度為 n的陣列，prev, cur 相較之下會更容易理解！
+
+#+begin_quote
+cur[j] = max(cur[j], cur[j-1])
+# 如果是用兩個array就會長成下面這樣
+cur[j] = max(prev[j], cur[j-1])
+#+end_quote
+
+** Find all Longest Common Subsequence
+   
+靠要找出全部的好像有點難..
+   
+   #+begin_src python
+     def longest_common_seq_iter_space_optimization(a, b):
+         # make the maximum space usage
+         if len(a) > len(b):
+             a, b = b, a
+
+         cur, prev = [0 for _ in range(len(a))], None
+
+         result = [] # wow.. I need a dictionary to 
+         # store the position as key, its ch and next pos as value
+
+         for i in range(len(b)):
+             prev = cur[0]
+             for j in range(len(a)):
+                 backup = cur[j]
+
+                 if a[j] == b[i]:
+                     if j-1 < 0 or i-1 < 0:
+                         cur[j] = 1
+                         result.append({(i,j): a[j], 'lcs': a[j]})
+
+                     else:
+                         cur[j] = prev + 1
+
+                         if len(result) == 0:
+                             result.append({(i,j): a[j], 'lcs': a[j]})
+
+                         else:
+                             found = False
+                             for child in result:
+                                 if (i-1, j-1) in child:
+                                     child[(i, j)] = a[j]
+                                     child['lcs'] += a[j]
+
+                             if not found:
+                                 result.append({(i,j): a[j], 'lcs': a[j]})
+
+                 else:
+                     if j-1 < 0 :
+                         cur[j] = cur[j]
+                     elif i - 1 < 0:
+                         cur[j] = cur[j-1]
+                     else:
+
+                         if cur[j] > cur[j-1]: 
+                        found = False
+                             for child in result:
+                                 if (i-1, j-1) in child:
+                                     child[(i, j)] = a[j]
+                                     child['lcs'] += a[j]
+
+                             if not found:
+                                 result.append({(i,j): a[j], 'lcs': a[j]})
+
+
+                         cur[j] = max(cur[j], cur[j-1])
+
+                 prev = backup
+
+         print(f'content is: {result}')
+         return cur[-1]
+
+     a = 'abcbde'
+     b = 'bcd'
+
+     print(longest_common_seq_iter_space_optimization(a, b))
+   #+end_src
+
+   #+RESULTS:
+   : content is: [{(1, 0): 'b', 'lcs': 'bc', (2, 1): 'c'}, {(2, 1): 'c', 'lcs': 'c'}, {(3, 0): 'b', 'lcs': 'b'}, {(4, 2): 'd', 'lcs': 'd'}]
+   : 3
+
+* Coin change problem
+  
+撰寫一個函式接受兩個參數，一個是數目n，另一個是array of 不同幣值的零錢，那今天就是要算出，用最少零錢個數去湊出n，舉例
+
+n = 10, lst = [1, 5, 10]
+
+那麼會有下列幾種可能
+
+1+1+1...+1
+1+1+1+1+1+1+5
+5+5
+10
+
+答案是一個十元硬幣
+
+這問題有點不好解，雖然知道可以用dynamic programming去解，但是還是有點不好想，基本上大概知道是窮舉法，跟貪婪演算法，所以不管怎樣都需要memoization，來增快速度要不然會超慢的，
+
+假設S是最少零錢個數去湊出n的最佳解，那麼今天可以推出\( S' = S - c ，S' \)應該要是最少零錢個數去湊出n-c的最佳解，假設S'不是的話，就會存在一個X是最少零錢個數去湊出n-c的最佳解，\( X = S - c \) ，所以等量公理原則，可以得出\( X+c = S \)，會與前面矛盾，所以X就是S'。
+
+#+begin_src python
+  def rec_coin(target, coins):
+
+      min_coins = target 
+      # 這個假設前提是一定會輸入一元
+
+      if target in coins:
+      # 這個很直覺吧，假設你今天要湊的價錢剛好等於你的硬幣陣列其中之一的幣值，那答案當然就是1
+          return 1
+      else:
+
+          for i in [c for c in coins if c <= target]:
+
+              num_coins = 1 + rec_coin(target-i, coins)
+
+              if num_coins < min_coins:
+                  min_coins = num_coins
+
+      return min_coins
+
+  print(rec_coin(13,[2,3,7]))
+#+end_src
+
+#+RESULTS:
+: 3
+
+
+上面這個你一run就會知道是非常沒效率的，原因就是窮舉法，先隨便估算一個for迴圈裡面有n個幣值要去loop，每一次loop都會在遞迴，總共要遞迴幾次呢？ 最多會遞迴到m（需要去湊的價錢數）次，所以你最多需要跑 \( n^m \) 這樣的次數，是非常可觀的，當然實際上會比較少一些，但是還是跑不掉這種次方性的次數，但是這邊我們可以使用dynamic programming來大量的增加其效率，仔細畫出function call的tree圖的話，應該就會發現有超多地方重複計算
+
+#+begin_src python
+  def rec_coin_dynamic(target, coins, stable):
+      min_coins = target
+
+      if target in coins:
+          stable[target] = 1
+          return 1
+      elif stable[target] > 0:
+          return stable[target]
+      else:
+          for i in [c for c in coins if c <= target]:
+
+              num_coins = 1 + rec_coin_dynamic(target-i, coins, stable)
+
+              if num_coins < min_coins:
+                  min_coins = num_coins
+                  stable[target] = min_coins
+
+      return min_coins
+
+  target = 5
+  stable = [0]*(target+1)
+  coins = [13,11,5]
+  print(rec_coin_dynamic(target, coins, stable))
+  # print('=====')
+  # print(rec_coin(target, coins))
+#+end_src
+
+今天假設我們有 $ V_1, V_2, ..., V_k $ 個硬幣，然後我們需要去湊 m 數目的錢，先設定 $ V_1 $ 為一元，目的是這樣至少會有一個解，根據我們使用的硬幣和價格，我們可以對應出一個二維陣列
+
+|    | $ V_1 $ | $V_2$ | $ V_3 $ | $ V_4 $ | .. | $ V_k $ |
+|  1 |       1 |     1 |       1 |       1 | .. |       1 |
+|  2 |       2 |     1 |       1 |       1 |  1 |       1 |
+|  3 |       3 |     2 |       1 |       1 |  1 |       1 |
+|  4 |       4 |     2 |       1 |       1 |  1 |       1 |
+| .. |         |       |         |         |    |         |
+|  m |       m |       |         |         |    |         |
+
+
+*遞迴的思考會變成top-down*
+*迴圈的思維就會是bottom-up*
+
+這個表格就是 $ miniCoin[i][j] $,  i就是 $ V_i $，j就是價錢，最大為m
+
+$ m[i][j] $ 的可能性，來自於 m[i][j- $ v_i $] 也就是 m[i][j] = m[i][j- $v_i$] + 1 **加一是因為，今天是要算硬幣個數**
+另外一個可能性就是，就是 $ v_i $ 這個硬幣其實根本沒有影響性，也就是說他無法拿來湊這個數目，我們會得到 m[i][j] = m[i-1][j]，因此結論上來講思維就是！
+
+從m[1][1]來看毫無疑問的價錢一元我們可以用一個幣值一元來達成所以是一，那麼m[2][1]呢？ 由於 一個幣值為2的已經超過價錢，所以我們繼續保持最佳解，為何是要保留呢？因為之後如果有更高的價錢需要去湊，我們將會基於前面的結果去累加，例如： m[2][3]  = m[2][1] + 1，也就是3元價錢的狀況，這時候由於m[2] 只跑到這邊，我們的硬幣只有1元和2元，這時需要注意的地方是，m[2][3]的最佳解還有可能是來自於m[1][3]，去比較兩者的值，然後去取最小值，因此到目前為止最佳解為2個硬幣。
+
+
+
+因此整體的最佳解就呼之欲出了，也就是m[$ V_k $][m]，在python中妳大可直接寫 m[-1[-1]
+
+
+#+begin_src python
+  import unittest
+
+  class TestCoins(unittest.TestCase):
+    
+      def check(self,solution):
+          coins = [1,5,10,25]
+          self.assertEqual(solution(45,coins),3)
+          self.assertEqual(solution(23,coins),5)
+          self.assertEqual(solution(74,coins),8)
+          print('Passed all tests.')
+  # Run Test
+
+  test = TestCoins()
+  test.check(coinChange)
+#+end_src
+
+
+
+** Reference
+   - [[https://jeremykun.com/2012/01/12/a-spoonful-of-python/][一個文章解說coin change]]
+
+* Longest Common Substring
+* 0-1 Knapsack problem
+  
+眼前有許多物品每個都有其相對應的價值，今天你只能選擇拿與不拿，但是你的包包能背的重量有限，想辦法拿到價值總和最高的物品組合。
+
+** Reference
+   https://www.techiedelight.com/0-1-knapsack-problem/
+
+* References
+  - https://blog.usejournal.com/top-50-dynamic-programming-practice-problems-4208fed71aa3
+  - https://runestone.academy/runestone/books/published/pythonds/index.html#
+* File Local Varaibles                                             :noexport:
+  # Local Variables:
+  # org-confirm-babel-evaluate: nil 
+  # org-export-babel-evaluate: nil
+  # End:
+
+  # ;;; -*- org-confirm-babel-evaluate: nil; -*-
+  # Note it seems that need to put this to the end of file...
+  # ok! the above two way can customize the variable in this local file
+  # and we can set the global shared property!
+
+  

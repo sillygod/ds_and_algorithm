@@ -1,0 +1,630 @@
+#+TITLE: Sorting and Searching 
+#+DESCRIPTION: Notes about the sorting and searching section
+#+PROPERTY: header-args:python :session py3.6
+#+PROPERTY: header-args :results output 
+#+PROPERTY: header-args+ :exports both
+
+
+# put your cursor on the property line and activate the file-wide properties by pressing C-c C-c
+# good ticket https://emacs.stackexchange.com/questions/20315/setting-an-org-mode-property-header-doesnt-work-for-the-first-one
+
+
+* Tips: 
+  
+  - =, '= can edit the code block in another window with the major mode
+  - =, ,= eval the code block
+  
+* Setup Eval Env
+
+  #+begin_src elisp :session py3.6 :results silent :exports none
+    (pyvenv-activate "~/miniconda2/envs/py3.6")
+  #+end_src
+
+  #+RESULTS:
+
+  #+begin_src python :session py3.6 :results output :exports none
+    import sys
+    print(sys.version)
+  #+end_src
+
+  #+RESULTS:
+  : 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 12:04:33) 
+  : [GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]
+
+  =Remember to run the above code block at first to ensure the environment=
+
+* Lectures
+
+** Sequence search
+   
+
+   #+begin_src python :session py3.6 :results output
+     def seq_search(ary, ele):
+         pos = 0
+         found = False
+
+         while pos < len(ary) and not found:
+             if ary[pos] == ele:
+                 found = True
+
+             pos += 1
+
+         return found
+
+   #+end_src
+
+   #+RESULTS:
+
+   Shit.. the above function's results should be set to *output* or it will not output anything.
+
+   #+begin_src python :session py3.6 :results output
+     arr = list(range(1,10))
+     print(seq_search(arr, 3))
+     print(seq_search(arr, 10))
+   #+end_src
+
+   #+RESULTS:
+   : True
+   : False
+
+   上面是最基本的search，那今天如果input是有順序的，那我們可以再稍微優化嗎？ 答案是可以的
+
+   #+begin_src python :session py3.6 :results output
+     def ordered_seq_search(ary, ele):
+         pos = 0
+         stop = False
+
+         while pos < len(ary) and not stop:
+             if ary[pos] == ele:
+                 return True
+
+             if ary[pos] > ele:
+                 print('Yo! you can stop to search..')
+                 stop = True
+
+             pos += 1
+
+         return False
+   #+end_src
+
+   #+RESULTS:
+
+
+   #+begin_src python :session py3.6 :results output
+     arr = list(range(1,16, 2))
+     print(ordered_seq_search(arr, 2))
+   #+end_src
+
+   #+RESULTS:
+   : Yo! you can stop to search..
+   : False
+
+** Binary search
+   binary search is quick search with the ordered sequence
+   
+   #+begin_src python 
+     def binary_search_iter(ary, ele):
+         start = 0
+         end = len(ary) - 1
+         found = False
+
+         while not found and start <= end:
+             mid = (start + end) // 2
+
+             if ary[mid] == ele:
+                 found = True
+             else:
+                 if ele < ary[mid]:
+                     end = mid - 1
+                 else:
+                     start = mid + 1
+
+         return found
+
+     binary_search_iter([1,2,3,4,5], 2)
+   #+end_src
+
+   #+RESULTS:
+   
+   #+begin_src python 
+     ary = list(range(10))
+     print(binary_search_iter(ary, 5))
+   #+end_src
+
+   #+RESULTS:
+   : True
+
+   #+begin_src python
+     def binary_search_rec(ary, ele):
+         if len(ary) == 0:
+             return False
+
+         mid = len(ary) // 2
+         if ary[mid] == ele:
+             return True
+         else:
+             if ary[mid] > ele:
+                 return binary_search_rec(ary[:mid], ele)
+             else:
+                 return binary_search_rec(ary[mid+1:], ele)
+   #+end_src
+
+   #+RESULTS:
+
+   #+begin_src python
+     ary = list(range(20))
+     print(binary_search_rec(ary, 5))
+   #+end_src
+
+   #+RESULTS:
+   : True
+
+** Hash Table
+   The idea of a dictionary used as a hash table to get and retrieve items using =keys= is often referred to as a mapping.
+  
+*** Concept 
+    item -> hash function -> slots (the underlying usually is array)
+   
+    the basic hash function is remainder method ex. the sum of integer % the size of the hash table. 不過明顯的是這很容易會發生碰撞 collision.所以要盡量想辦法減少衝突。
+   
+    - folding method
+    - mid square method
+   
+*** Collision Resolution
+    
+    - linear probing
+    似乎就是遇到衝突那就找下一個slot直到slot沒有被佔據
+
+    #+DOWNLOADED: https://i.imgur.com/VraAbfX.png @ 2019-08-19 23:41:58
+    #+ATTR_ORG: :width 400
+    [[file:Lectures/VraAbfX_2019-08-19_23-41-58.png]]
+
+    所以經過這個方式會變成
+
+    #+DOWNLOADED: https://i.imgur.com/3M4J4Gb.png @ 2019-08-19 23:53:12
+    #+ATTR_ORG: :width 400
+    [[file:Lectures/3M4J4Gb_2019-08-19_23-53-12.png]]
+
+    這種找尋另外一個slot的行為我們叫它為rehasing
+    
+    - quadratic probing
+    h+1, h+4, h+9
+      
+    - chaining
+
+    
+*** Implementation
+    
+    #+begin_src python
+      class HashTable:
+          def __init__(self, size: int):
+              self._size = size
+              self._slots = [None] * self._size
+              self._data = [None] * self._size
+
+          def put(self, key, data):
+              hashvalue = self.hashfunction(key, len(self._slots))
+              if self._slots[hashvalue] is None:
+                  self._slots[hashvalue] = key
+                  self._data[hashvalue] = data
+              else:
+                  if self._slots[hashvalue] == key:
+                      self._data[hashvalue] = data
+
+                  else:
+                      nextslot = self.rehash(hashvalue, self._size)
+
+                      while self._slots[nextslot] is not None and self._slots[
+                              nextslot] != key:
+                          nextslot = self.rehash(nextslot, self._size)
+
+                      if self._slots[nextslot] is None:
+                          self._slots[nextslot] = key
+                          self._data[nextslot] = data
+                      else:
+                          # ok, 這邊因為前面while邏輯所以一定會找到相同的key值
+                          self._data[nextslot] = data
+
+          def hashfunction(self, key: int, size: int) -> int:
+              return key % size
+
+          def rehash(self, old_hash: int, size: int):
+              return (old_hash + 1) % size
+
+          def get(self, key):
+              slot = self.hashfunction(key, self._size)
+              data = None
+              stop = False
+              found = False
+              position = slot
+
+              while self._slots[position] is not None and not found and not stop:
+                  if self._slots[position] == key:
+                      found = True
+                      data = self._data[position]
+                  else:
+                      position = self.rehash(position, self._size)
+                      if position == slot:
+                          stop = True
+
+              return data
+
+          def __getitem__(self, key):
+              return self.get(key)
+
+          def __setitem__(self, key, data):
+              return self.put(key, data)
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      h = HashTable(5)
+      h[1] = 'one'
+      h[50] = 'fifty' 
+      print(h[1])
+    #+end_src
+
+    #+RESULTS:
+    : one
+
+** Sorting 
+   the visualize algorithm resource
+   - www.sorting-algorithms.com
+   - https://visualgo.net/en/sorting
+*** Bubble Sort
+    [[https://en.wikipedia.org/wiki/Bubble_sort][wiki]] also has a very good introduction about the bubble sort(sinking sort)
+    I think why this is called sinking sort is that you can see the =n= will decrese each time. It's is something like a ship is sinking. As for why is called bubble sort is that the behavior of swapping the adjacent element is something like a bubble rising.
+    
+    #+begin_src python
+      def bubble_sort(ary):
+
+          for n in range(len(ary)-1, 0, -1):
+              # this inner loop will ensure the largest element will
+              # be put the correct position
+              swapped = False
+              for i in range(n):
+                  if ary[i] > ary[i+1]:
+                      ary[i], ary[i+1] = ary[i+1], ary[i]
+                      swapped = True
+
+              if not swapped:
+                  break
+    #+end_src
+
+    #+RESULTS:
+
+    #+begin_src python
+      ary = [2,3,5,1,6]
+      bubble_sort(ary)
+      print(ary)
+    #+end_src
+
+    #+RESULTS:
+    : [1, 2, 3, 5, 6]
+    
+*** Insertion Sort
+    [[https://en.wikipedia.org/wiki/Insertion_sort][wiki]] 我想這個命名是來自於他的過程，會一直做插入的動作，跟排撲克牌很像，想像著你從撲克牌挑選最小值，然後將她插入到前面，然後後面每個牌是不是跟著往後位移！相對的這個並不是用swap而是一種位移概念跟撲克牌真的相同
+    
+    #+begin_src python
+      def insertion_sort(ary):
+
+          for i in range(1, len(ary)):
+              current_value = ary[i]
+
+              for j in range(i-1, -1, -1):
+                  if ary[j] > current_value:
+                      ary[j+1] = ary[j]
+                  else:
+                      ary[j+1] = current_value
+                      break
+              else:
+                  ary[j] = current_value
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      ary = [2,5,1]
+      insertion_sort(ary)
+      print(ary)
+    #+end_src
+
+    #+RESULTS:
+    : [1, 2, 5]
+
+*** Selection Sort
+    由左而右排，也就是你希望每一次loop後，你希望你的左邊都是已經排序好的seq！所以過程是一開始你會以你最左邊的數字為基準，然後開始去跟後面的牌比較，找到最小的就swap
+    #+begin_src python
+      def selection_sort(ary):
+          num_of_comparision = 0
+          num_of_swap = 0
+
+          for i in range(0, len(ary)):
+
+              min_pos = i
+
+              for j in range(i+1, len(ary)):
+                  num_of_comparision += 1
+                  if ary[j] < ary[min_pos]:
+                      min_pos = j
+
+              # actually we can reduce the swap by add this comparision
+              if i != min_pos:
+                  num_of_swap += 1
+                  ary[min_pos], ary[i] = ary[i], ary[min_pos]
+
+          print(f'comparasion: {num_of_comparision}, swap: {num_of_swap}')
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      ary = [2,5,3,1,7,2]
+      selection_sort(ary)
+      print(ary)
+      ary = [1,2,3,4,5,6]
+      selection_sort(ary)
+      print(ary)
+    #+end_src
+
+    #+RESULTS:
+    : comparasion: 15, swap: 5
+    : [1, 2, 2, 3, 5, 7]
+    : comparasion: 15, swap: 0
+    : [1, 2, 3, 4, 5, 6]
+    
+*** Shell Sort
+    [[https://en.wikipedia.org/wiki/Shellsort][shell sort]] 是改良版的insertion sort，原理是她多了所謂的gap，gap有很多種方式產生，但是本質上就是一個數字，然後演算法跟insertion sort是一樣的只是差在要多加gap
+    #+begin_src python
+      def shell_sort(ary):
+          num_of_swap = 0
+          num_of_comparision = 0
+          gap = len(ary) // 2
+
+          while gap > 0:
+
+              for i in range(gap, len(ary)):
+                  # every time loop complete, the left part is sorted.
+                  pick = ary[i]
+
+                  for j in range(i - gap, -1, -gap):
+                      num_of_comparision += 1
+                      if ary[j] > pick:
+                          ary[j + gap] = ary[j]
+                          num_of_swap += 1
+                      else:
+                          ary[j + gap] = pick
+                          num_of_swap += 1
+                          break
+
+                  else:
+                      ary[j] = pick
+                      num_of_swap += 1
+
+
+              gap = gap // 2
+
+          print(f'num of swap: {num_of_swap}')
+          print(f'num of comparision: {num_of_comparision}')
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      ary = [2,5,3,1,10,8,9]
+      shell_sort(ary)
+      print(ary)
+    #+end_src
+
+    #+RESULTS:
+    : num of swap: 16
+    : num of comparision: 15
+    : [1, 2, 3, 5, 8, 9, 10]
+
+*** Merge Sort
+    [[https://en.wikipedia.org/wiki/Merge_sort][merge sort]] 每次將seq切分成一半，切到無法再切也就是說當切到每個片段~ 1<=長度<=2 ~，然後進行merge的動作！，每當開始從底層merge回來，每個left_ary, right_ary都會是已經sort過的ary，下面的做法，還可以故意減少array copy的動作，只是為了方便實作就先用這樣的方式了。
+    
+    #+begin_src python
+      def merge_sort(ary):
+          length = len(ary)
+          if length > 1:
+              mid = length // 2
+              left_ary = ary[:mid]
+              right_ary = ary[mid:]
+
+              merge_sort(left_ary)
+              merge_sort(right_ary)
+
+              # start to merge process
+
+              j, k = 0, 0
+              for i in range(len(ary)):
+                  if len(left_ary) != j and (len(right_ary) == k
+                                             or left_ary[j] < right_ary[k]):
+                      ary[i] = left_ary[j]
+                      j += 1
+                  else:
+                      ary[i] = right_ary[k]
+                      k += 1
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      ary = [2,7,5]
+      merge_sort(ary)
+      print(ary)
+    #+end_src
+
+    #+RESULTS:
+    : [2, 5, 7]
+
+*** Quick Sort
+    [[https://en.wikipedia.org/wiki/Quicksort][quick sort]] 核心概念是先選擇一個pivot，然後進行所謂的partition，將array重新排序成在pivot左邊的都是小於等於pivot，右邊都是大於等於pivot
+    這邊其實如果是非inplace版本的其實實作上還滿直覺的！
+    
+    #+begin_src python
+      def quick_sort(ary):
+          if len(ary) <= 1:
+              return ary
+
+          pivot = ary[len(ary)//2]
+          left = [x for x in ary if x < pivot]
+          middle = [x for x in ary if x == pivot]
+          right = [x for x in ary if x > pivot]
+
+          return quick_sort(left) + middle + quick_sort(right)
+    #+end_src
+
+    #+RESULTS:
+    
+    #+begin_src python
+      ary = [5,2,3,1,6,3,2]
+      ary = quick_sort(ary)
+      print(ary)
+
+    #+end_src
+
+    #+RESULTS:
+    : [1, 2, 2, 3, 3, 5, 6]
+    
+如果想要實作in-place versio的話，相對會比較麻煩一點點
+
+#+begin_src python
+  def quick_sort_inplace(ary):
+      quick_sort_impl(ary, 0, len(ary)-1)
+
+
+  def quick_sort_impl(ary, start, end):
+      print(f'start: {start}, end: {end}')
+      if start < end:
+          pivot = ary[(start + end) // 2]
+          left, right = partition(ary, pivot)
+          quick_sort_impl(ary, start, left-1)
+          quick_sort_impl(ary, right+1, end)
+
+
+  def partition(ary: list, pivot: int) -> (int, int):
+      # three-way partition
+      # https://en.wikipedia.org/wiki/Dutch_national_flag_problem
+      i, j = 0, 0
+      n = len(ary) - 1
+
+      print(f'input ary: {ary}')
+
+      while j <= n:
+          if ary[j] < pivot:
+              ary[i], ary[j] = ary[j], ary[i]
+              i += 1
+              j += 1
+          elif ary[j] > pivot:
+              ary[j], ary[n] = ary[n], ary[j]
+              n -= 1
+          else:
+              j += 1
+
+          print(f'after swap: {ary}')
+
+
+      print(f'left: {i}, right: {j}')
+      return i, n
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python
+  ary = [2,3,5,1,3,8,6]
+  partition(ary, 3)
+  print(ary)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+input ary: [2, 3, 5, 1, 3, 8, 6]
+after swap: [2, 3, 5, 1, 3, 8, 6]
+after swap: [2, 3, 5, 1, 3, 8, 6]
+after swap: [2, 3, 6, 1, 3, 8, 5]
+after swap: [2, 3, 8, 1, 3, 6, 5]
+after swap: [2, 3, 3, 1, 8, 6, 5]
+after swap: [2, 3, 3, 1, 8, 6, 5]
+after swap: [2, 1, 3, 3, 8, 6, 5]
+left: 2, right: 4
+[2, 1, 3, 3, 8, 6, 5]
+#+end_example
+
+上面是測試three way partition是否有達到我們要的效果！
+
+#+begin_src python
+  ary = [2,3,5,1,3,8,6]
+  quick_sort_inplace(ary)
+  print(ary)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+start: 0, end: 6
+input ary: [2, 3, 5, 1, 3, 8, 6]
+after swap: [6, 3, 5, 1, 3, 8, 2]
+after swap: [8, 3, 5, 1, 3, 6, 2]
+after swap: [3, 3, 5, 1, 8, 6, 2]
+after swap: [1, 3, 5, 3, 8, 6, 2]
+after swap: [1, 3, 5, 3, 8, 6, 2]
+after swap: [1, 5, 3, 3, 8, 6, 2]
+after swap: [1, 5, 3, 3, 8, 6, 2]
+left: 0, right: 1
+start: 0, end: -1
+start: 1, end: 6
+input ary: [1, 5, 3, 3, 8, 6, 2]
+after swap: [1, 5, 3, 3, 8, 6, 2]
+after swap: [1, 2, 3, 3, 8, 6, 5]
+after swap: [1, 2, 3, 3, 8, 6, 5]
+after swap: [1, 2, 3, 3, 8, 6, 5]
+after swap: [1, 2, 3, 3, 8, 6, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+left: 2, right: 4
+start: 1, end: 1
+start: 4, end: 6
+input ary: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 8, 5]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+left: 6, right: 7
+start: 4, end: 5
+input ary: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 6, 5, 8]
+after swap: [1, 2, 3, 3, 5, 6, 8]
+after swap: [1, 2, 3, 3, 5, 6, 8]
+left: 5, right: 6
+start: 4, end: 4
+start: 6, end: 5
+start: 7, end: 6
+[1, 2, 3, 3, 5, 6, 8]
+#+end_example
+
+** Sorting Interview Problem
+*** sorting interview 都是考實做這樣而已
+** Graph algorithms -- pending
+** Riddles -- pending
+** Mock Interview
+
+* File Local Varaibles
+# Local Variables:
+# org-confirm-babel-evaluate: nil 
+# End:
+
+# ;;; -*- org-confirm-babel-evaluate: nil; -*-
+# Note it seems that need to put this to the end of file...
+# ok! the above two way can customize the variable in this local file
+# and we can set the global shared property!
+
+  

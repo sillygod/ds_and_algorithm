@@ -1,0 +1,407 @@
+#+TITLE: Graph algorithm
+#+DESCRIPTION: Notes about the sorting and searching section
+#+PROPERTY: header-args:python :session py3.6
+#+PROPERTY: header-args :results output 
+#+PROPERTY: header-args+ :exports both
+
+* Setup Eval Env
+  
+  #+begin_src elisp :session py3.6 :results silent :exports none
+    (pyvenv-activate "~/miniconda2/envs/py3.6")
+  #+end_src
+
+  #+RESULTS:
+
+  #+begin_src python :exports none
+    import sys
+    print(sys.version)
+  #+end_src
+
+  #+RESULTS:
+  : 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 12:04:33) 
+  : [GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]
+
+* Lectures
+  - [[http://nbviewer.jupyter.org/github/jmportilla/Python-for-Algorithms--Data-Structures--and-Interviews/blob/master/Trees/Binary%2520Search%2520Trees.ipynb][the python ds udemy course resource link]]
+  graph的應用十分廣泛
+
+  - friendship graph
+  - web crawling
+  - garbage collection
+  - puzzle solving & games
+
+** Adjacency List
+   這個課程的實作是用class去做包裝也不是不行啦
+
+   #+begin_src python
+     class Vertex:
+         def __init__(self, key):
+             self.id = key
+             self.connectedTo = {}
+
+         def addNeighbor(self, nbr, weight=0):
+             self.connectedTo[nbr] = weight
+
+         def __str__(self):
+             connections = [x.id for x in self.connectedTo]
+             return f'{self.id} connectedTo: {connections}'
+
+         def getConnections(self):
+             return self.connectedTo.keys()
+
+         def getId(self):
+             return self.id
+
+         def getWeight(self, nbr):
+             return self.connectedTo[nbr]
+   #+end_src
+
+   #+RESULTS:
+   
+   #+begin_src python
+     class Graph:
+
+         def __init__(self):
+             self.vertList = {}
+             self.numVertices = 0
+
+         def addVertex(self, key):
+             self.numVertices += 1
+             newVertex = Vertex(key)
+             self.vertList[key] = newVertex
+             return newVertex
+
+         def getVertex(self, n):
+             if n in self.vertList:
+                 return self.vertList[n]
+             else:
+                 return None
+
+         def __contains__(self, n):
+             # it rewrite the logic of x in object of Graph
+             return n in self.vertList
+
+         def addEdge(self, f, t, cost=0):
+             if f not in self.vertList:
+                 self.addVertex(f)
+             if t not in self.vertList:
+                 self.addVertex(t)
+
+             self.vertList[f].addNeighbor(self.vertList[t], cost)
+
+         def getVertices(self):
+             return self.vertList.keys()
+
+         def __iter__(self):
+             return iter(self.vertList.values())
+   #+end_src
+
+   #+RESULTS:
+   
+   開始測試一下上面的程式碼
+
+   #+begin_src python
+     g = Graph()
+     for i in range(7):
+         g.addVertex(i)
+
+     print(g.vertList)
+   #+end_src
+
+   #+RESULTS:
+   : {0: <__main__.Vertex object at 0x1030265c0>, 1: <__main__.Vertex object at 0x103026278>, 2: <__main__.Vertex object at 0x103026438>, 3: <__main__.Vertex object at 0x103026470>, 4: <__main__.Vertex object at 0x1030264a8>, 5: <__main__.Vertex object at 0x1030264e0>, 6: <__main__.Vertex object at 0x103026400>}
+
+   #+begin_src python
+     g.addEdge(0, 1, 2)
+     for vertex in g:
+         print(vertex)
+   #+end_src
+
+   #+RESULTS:
+   : 0 connectedTo: [1]
+   : 1 connectedTo: []
+   : 2 connectedTo: []
+   : 3 connectedTo: []
+   : 4 connectedTo: []
+   : 5 connectedTo: []
+   : 6 connectedTo: []
+
+** Word ladder
+   
+   #+begin_src python
+     words = [
+         'pope',
+         'rope',
+         'sage',
+         'best',
+         'ripe',
+         'pipe',
+     ]
+
+     def buildGraph(words):
+         d = {}
+         g = Graph()
+
+         for word in words:
+             print(word)
+             for i in range(len(word)):
+                 bucket = word[:i] + '_' + word[i+1:]
+                 if bucket in d:
+                     d[bucket].append(word)
+                 else:
+                     d[bucket] = [word]
+
+         # add vertices and edges for words in the same bucket
+         for bucket in d.keys():
+             for word1 in d[bucket]:
+                 for word2 in d[bucket]:
+                     if word1 != word2:
+                         g.addEdge(word1, word2)
+
+         return g
+
+     for vertex in buildGraph(words):
+         print(vertex)
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   pope
+   rope
+   sage
+   best
+   ripe
+   pipe
+   pope connectedTo: ['rope', 'pipe']
+   rope connectedTo: ['pope', 'ripe']
+   pipe connectedTo: ['pope', 'ripe']
+   ripe connectedTo: ['rope', 'pipe']
+   #+end_example
+
+** Implement Basic Graph
+   
+   目前比較不解的是，為什麼要有state？好像我目前遇到的題目可以不用用到
+
+   #+begin_src python
+     from enum import Enum
+
+     class State(Enum):
+         unvisited = 1
+         visited = 2
+         visiting = 3
+
+
+     class Node:
+
+         def __init__(self, num):
+             self.num = num
+             self.visited_state = State.unvisited
+             self.adjacent = {} # node: weight
+
+         def __str__(self):
+             return str(self.num)
+
+
+     class Graph:
+
+         def __init__(self):
+             self.nodes = {}
+
+         def add_node(self, num):
+             self.nodes[num] = Node(num)
+             return self.nodes[num]
+
+         def add_edge(self, source, dest, weight=0):
+             if source not in self.nodes:
+                 self.add_node(source)
+
+             if dest not in self.nodes:
+                 self.add_node(dest)
+
+             self.nodes[source].adjacent[self.nodes[dest]] = weight
+   #+end_src
+
+   #+RESULTS:
+   
+   #+begin_src python
+     g = Graph()
+     g.add_edge(0,1,5)
+     print(g.nodes)
+     g.add_edge(1,2,3)
+     print(g.nodes)
+   #+end_src
+
+   #+RESULTS:
+   : {0: <__main__.Node object at 0x1030264a8>, 1: <__main__.Node object at 0x1030264e0>}
+   : {0: <__main__.Node object at 0x1030264a8>, 1: <__main__.Node object at 0x1030264e0>, 2: <__main__.Node object at 0x103026400>}
+
+** Depth First Search
+   #+begin_src python
+     graph = {'A': set(['B', 'C']),
+              'B': set(['A', 'D', 'E']),
+              'C': set(['A', 'F']),
+              'D': set(['B']),
+              'E': set(['B', 'F']),
+              'F': set(['C', 'E'])}
+   #+end_src
+
+   #+RESULTS:
+   
+   #+begin_src python
+     def dfs(graph, start):
+         visited, stack = [], [start]
+         while stack:
+             vertex = stack.pop()
+             if vertex not in visited:
+                 visited.append(vertex)
+                 stack.extend([node for node in graph[vertex] if node not in visited])
+
+         return visited
+
+     print(dfs(graph, 'A'))
+   #+end_src
+
+   #+RESULTS:
+   : ['A', 'C', 'F', 'E', 'B', 'D']
+   
+   基本上dfs, bfs兩者的邏輯一樣，只差在拿東西的順序而已，也就是 pop from head or pop from tail
+   
+   #+begin_src python
+     def dfs_path(graph, start, to):
+         stack = [(start, [start])]
+
+         while stack:
+             print(f'stack: {stack}')
+             vertex, path = stack.pop()
+             print(f'can go to {graph[vertex]}, but should not visit {path} again')
+
+             for n in [node for node in graph[vertex] if node not in path]:
+                 if n == to:
+                     yield path + [n]
+                 else:
+                     stack.append((n, path+[n]))
+
+
+     print(list(dfs_path(graph, 'A', 'F')))
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   stack: [('A', ['A'])]
+   can go to {'B', 'C'}, but should not visit ['A'] again
+   stack: [('B', ['A', 'B']), ('C', ['A', 'C'])]
+   can go to {'F', 'A'}, but should not visit ['A', 'C'] again
+   stack: [('B', ['A', 'B'])]
+   can go to {'D', 'E', 'A'}, but should not visit ['A', 'B'] again
+   stack: [('D', ['A', 'B', 'D']), ('E', ['A', 'B', 'E'])]
+   can go to {'B', 'F'}, but should not visit ['A', 'B', 'E'] again
+   stack: [('D', ['A', 'B', 'D'])]
+   can go to {'B'}, but should not visit ['A', 'B', 'D'] again
+   [['A', 'C', 'F'], ['A', 'B', 'E', 'F']]
+   #+end_example
+
+** Breadth First Search
+   [[https://www.youtube.com/watch?v=s-CYnVz-uh4][a good tutorial about Graph]]
+   
+   G = (v, e)
+   v = set of vertices
+   e = set of edges
+
+   #+begin_src python
+     # assumed that we have a graph as below
+     graph = {'A': ['B', 'C'],
+              'B': ['A', 'D', 'E'],
+              'C': ['A', 'F'],
+              'D': ['B'],
+              'E': ['B', 'F'],
+              'F': ['C', 'E']}
+
+     def bfs(graph, start):
+         visited, queue = [], [start]
+         while queue:
+             vertex = queue.pop(0)
+             if vertex not in visited:
+                 visited.append(vertex)
+                 queue.extend([node for node in graph[vertex] if node not in visited])
+
+         return visited
+
+     print(bfs(graph, 'A'))
+   #+end_src
+
+   #+RESULTS:
+   : ['A', 'B', 'C', 'D', 'E', 'F']
+
+   #+begin_src python
+     def bfs_path(graph, start, end):
+         queue = [(start, [start])]
+
+         while queue:
+             print(f'q: {queue}')
+             vertex, path = queue.pop(0)
+             print(f'can go to {graph[vertex]}, but should not visit {path} again')
+
+             for n in [node for node in graph[vertex] if node not in path]:
+                 if n == end:
+                     yield path + [n]
+                 else:
+                     queue.append((n, path+[n]))
+
+     print(list(bfs_path(graph, 'A', 'F')))
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   q: [('A', ['A'])]
+   can go to ['B', 'C'], but should not visit ['A'] again
+   q: [('B', ['A', 'B']), ('C', ['A', 'C'])]
+   can go to ['A', 'D', 'E'], but should not visit ['A', 'B'] again
+   q: [('C', ['A', 'C']), ('D', ['A', 'B', 'D']), ('E', ['A', 'B', 'E'])]
+   can go to ['A', 'F'], but should not visit ['A', 'C'] again
+   q: [('D', ['A', 'B', 'D']), ('E', ['A', 'B', 'E'])]
+   can go to ['B'], but should not visit ['A', 'B', 'D'] again
+   q: [('E', ['A', 'B', 'E'])]
+   can go to ['B', 'F'], but should not visit ['A', 'B', 'E'] again
+   [['A', 'C', 'F'], ['A', 'B', 'E', 'F']]
+   #+end_example
+
+   由上面看來這個是走訪所有的點，所以第一個路徑會是最短路徑
+
+   #+begin_src python
+     def shortest_path_bfs(graph, start, end):
+         try:
+             return next(bfs_path(graph, start, end))
+         except StopIteration:
+             return None
+
+     print(shortest_path_bfs(graph, 'A', 'F'))
+   #+end_src
+
+   #+RESULTS:
+   : q: [('A', ['A'])]
+   : can go to ['B', 'C'], but should not visit ['A'] again
+   : q: [('B', ['A', 'B']), ('C', ['A', 'C'])]
+   : can go to ['A', 'D', 'E'], but should not visit ['A', 'B'] again
+   : q: [('C', ['A', 'C']), ('D', ['A', 'B', 'D']), ('E', ['A', 'B', 'E'])]
+   : can go to ['A', 'F'], but should not visit ['A', 'C'] again
+   : ['A', 'C', 'F']
+
+** TODO Solve 2x2x3 cube with bfs
+   [[https://vasanthaganeshk.wordpress.com/2016/05/04/the-story-of-how-i-solved-2x2x2-rubiks-cube-with-a-python-script/][a blog tutorial]]
+   vertex = for each possible state of cube
+   edge = for each possible move
+   vertices = 8! * 3^8 每一個vertices代表每一個平面存在的可能性。實際上會更少，因為會有重複畢竟在3d世界你稍微旋轉一下就會發現是一樣的排列。沒想到要建立graph還滿有思考難度的..
+
+** Knight's Tour 
+
+* File Local Varaibles
+  # Local Variables:
+  # org-confirm-babel-evaluate: nil 
+  # End:
+
+  # ;;; -*- org-confirm-babel-evaluate: nil; -*-
+  # Note it seems that need to put this to the end of file...
+  # ok! the above two way can customize the variable in this local file
+  # and we can set the global shared property!
+
+  

@@ -1,0 +1,307 @@
+#+TITLE: Recursion
+#+DESCRIPTION: Notes about the recursion
+#+PROPERTY: header-args:python :session py3.6
+#+PROPERTY: header-args :results output 
+#+PROPERTY: header-args+ :exports both
+
+
+* Setup Eval Env
+  
+  #+begin_src elisp :session py3.6 :results silent :exports none
+    (pyvenv-activate "~/miniconda2/envs/py3.6")
+  #+end_src
+
+  #+RESULTS:
+
+  #+begin_src python :exports none
+    import sys
+    print(sys.version)
+  #+end_src
+
+  #+RESULTS:
+  : 3.6.4 |Anaconda, Inc.| (default, Jan 16 2018, 12:04:33) 
+  : [GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]
+
+* Recursion
+
+簡單來講，就是function呼叫自己的一種做法，另一種就是資料結構裡面包含自己相同資料結構，造成遞迴，舉例來講像是linked list，node裡面還包含相同資料型態的data member，所以在traverse node時，就會產生遞迴。以下從一些問題來了解遞迴。
+
+** Problem set
+
+*** 撰寫一個函式接受參數n，回傳從0到n的累加結果
+   
+ 雖然這題可以用公式解，但是這邊目的是要學習遞迴～
+
+ #+begin_src python
+   def cul_sum(n):
+       if n == 1:
+           return 1
+       else:
+           return n + cul_sum(n-1)
+    
+   print(cul_sum(4))
+ #+end_src
+
+ #+RESULTS:
+ : 10
+
+*** 撰寫一個函式接受參數n，回傳獨立每位數的數字的總和
+   
+ 舉例: n=1234, 回傳1+2+3+4=10
+
+ #+begin_src python
+   def digit_sum(n):
+       # 這是比較python trick way
+       # Here, we can use list comprehension or map something more
+       # functional programming style.
+       n = str(n)
+       return sum(map(int, n))
+
+   # 由於此章節是再講recursion，所以我們換個思維來講這題
+
+   def digit_sum_rec(n):
+       if n < 10:
+           return n
+       else:
+           return n % 10 + digit_sum_rec(n//10)
+
+   print(digit_sum(1234))
+   print(digit_sum(1234))
+
+ #+end_src
+
+ #+RESULTS:
+ : 10
+ : 10
+
+*** 撰寫一個叫做word_split的函式
+   
+ 接受兩個參數，一個是字串phrase，另一個是一個陣列裡面有許多單字，今天目的就是確認這個phrase是否能夠從陣列的單字去組成，並且回傳其組合的陣列
+
+ #+begin_src python
+   def word_split(phrase,list_of_words, output = None):
+       '''
+       Note: This is a very "python-y" solution.
+       ''' 
+
+       # Checks to see if any output has been initiated.
+       # If you default output=[], it would be overwritten for every recursion!
+       if output is None:
+           output = []
+
+       # For every word in list
+       for word in list_of_words:
+
+           # If the current phrase begins with the word, we have a split point!
+           if phrase.startswith(word):
+               # Add the word to the output
+               output.append(word)
+
+               # Recursively call the split function on the remaining portion of the phrase--- phrase[len(word):]
+               # Remember to pass along the output and list of words
+               return word_split(phrase[len(word):],list_of_words,output)
+
+       # Finally return output if no phrase.startswith(word) returns True
+       return output    
+
+   print(word_split('ilovedogsJohn',['i','love', 'dogs', 'John']))
+ #+end_src
+
+ #+RESULTS:
+ : ['i', 'love', 'dogs', 'John']
+
+** Memoization
+   
+簡單來講就是一種cache，為了減少重複計算，將對應的input值的函式計算結果儲存起來，下次遇到相同input時，就可以避免重複計算，大大的減少運行時間。其實這種技巧有被應用在 [[https://en.wikipedia.org/wiki/Dynamic_programming][dynamic programming or called dynamic optimization]] 。
+
+dp = divide and conquer 再加上 subprogram only calculate once, lookup the result of same subprogram from the cache table. 其實就是memoization的意思，需要注意的是dynamic programming需要具有某種特性，請看wiki解釋的片段
+
+*需要注意的是dynamic programming需要具有某種特性，請看wiki解釋的片段*
+
+#+begin_quote
+There are two key attributes that a problem must have in order for dynamic programming to be applicable: optimal substructure and overlapping sub-problems.
+#+end_quote
+
+也就是說他要有所謂的overlapping subprogram，如果沒有的話，就不算DP，這也是為啥quick sort和merge sort不列入DP的原因，因為他們不會有overlapping subprogram的情況發生！
+
+*** 最經典的例子 Factorial
+    
+    #+begin_src python
+      def factorial(n):
+          if n == 1:
+              return 1
+    
+          return n*factorial(n-1)
+    
+    
+      cache_result = {}
+
+      def factorial_memoization(n):
+          if n == 1:
+              return 1
+    
+          if n not in cache_result:
+              cache_result[n] = n*factorial_memoization(n-1)
+        
+          return cache_result[n]
+    
+    
+    #+end_src
+
+上面這種並不算是dynamic programming，因為注意看他的subprogram並不會有overlapping的情況出現，而且單純若是只run一次的話，其實兩個效能是一樣的，因為cache並沒有發揮到其效用，上面timeit是因為他背後run了好幾次所以才會有感覺到差異。 所以要來看真正的可以用dp來解的問題!
+
+*** Fibonacci sequence
+
+
+#+begin_src python
+  def fibonacci_rec(n):
+      if n == 0 or n == 1:
+          return n
+      else:
+          return fibonacci_rec(n-1) + fibonacci_rec(n-2)
+
+
+  class memoize:
+
+      def __init__(self, f):
+          self.f = f
+          self.cache = {}
+
+      def __call__(self, *args):
+          if not args in self.cache:
+              self.cache[args] = self.f(*args)
+          return self.cache[args]
+
+  @memoize
+  def fibonacci_dp(n):
+      if n == 0:
+          return 0
+      if n == 1 or n == 2:
+          return 1
+      else:
+          return fibonacci_dp(n-1) + fibonacci_dp(n-2)
+
+
+  def fibonacci_iter(n):
+      a, b = 0, 1
+      for i in range(n):
+          a, b = b, a+b
+      return a
+#+end_src
+
+#+RESULTS:
+
+接著讓我們來用用看 timeit 模組來看看所耗費的時間吧
+
+#+begin_src python
+  import timeit
+  print(timeit.timeit(stmt='fibonacci_dp(20)', number=1000, globals=globals()))
+#+end_src
+
+#+RESULTS:
+: 0.0004165310019743629
+
+#+begin_src python
+  import timeit
+  print(timeit.timeit(stmt='fibonacci_rec(20)', number=1000, globals=globals()))
+#+end_src
+
+#+RESULTS:
+: 3.2454232050004066
+
+#+begin_src python
+  import timeit
+  print(timeit.timeit(stmt='fibonacci_iter(20)', number=1000, globals=globals()))
+#+end_src
+
+#+RESULTS:
+: 0.0016167759968084283
+
+沒想到 memoize + recursion 是最快的！？
+
+另外上面我們使用的最簡單的寫法dict，來做memoization，其實要做一個比較正式的memoization的話，就是寫一個工具去記錄函式呼叫的參數和其相對的結果。
+
+#+begin_src python
+  class memoize:
+
+      def __init__(self, f):
+          self.cache = {}
+          self.f = f
+
+      def __call__(self, *args):
+          if args not in self.cache:
+              self.cache[args] = self.f(*args)
+          return self.cache[args]
+#+end_src
+
+
+#+begin_src python
+  import unittest
+
+  class TestFib(unittest.TestCase):
+    
+      def test(self,solution):
+          self.assertEqual(solution(10),55)
+          self.assertEqual(solution(1),1)
+          self.assertEqual(solution(23),28657)
+          print('Passed all tests.')
+  # UNCOMMENT FOR CORRESPONDING FUNCTION
+  t = TestFib()
+
+  t.test(fibonacci_rec)
+  t.test(fibonacci_dp)
+  t.test(fibonacci_iter)
+#+end_src
+
+#+RESULTS:
+: Passed all tests.
+: Passed all tests.
+: Passed all tests.
+
+** The tower of hanoi
+    
+最後來講講河內塔，算是十分有趣，用遞迴可以漂亮解決! 不過老實講一開始看到我還真的沒有很容易想遞迴怎麼寫
+[[https://www.youtube.com/watch?v=q6RicK1FCUs][一個不錯的教學]]
+
+總結上論點是，由上到下編號一到n，想像最後把第一個pad從a移到c前，如果以三個數量來想像的話，就是前兩個藉由Ｃ從Ａ到Ｂ，這樣一來n就可以從Ａ到Ｃ了，基底打好了，再來就是將上面兩個藉由Ａ從B到Ｃ
+
+#+begin_src python
+  def hanoi(n, A="A", B="B", C="C"):
+      if n > 0:
+          hanoi(n-1, A, C, B)
+          print(f'n:{n}, Move a Disc from {A} to {C}')
+          hanoi(n-1, B, A, C)
+  
+  hanoi(4)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+n:1, Move a Disc from A to B
+n:2, Move a Disc from A to C
+n:1, Move a Disc from B to C
+n:3, Move a Disc from A to B
+n:1, Move a Disc from C to A
+n:2, Move a Disc from C to B
+n:1, Move a Disc from A to B
+n:4, Move a Disc from A to C
+n:1, Move a Disc from B to C
+n:2, Move a Disc from B to A
+n:1, Move a Disc from C to A
+n:3, Move a Disc from B to C
+n:1, Move a Disc from A to B
+n:2, Move a Disc from A to C
+n:1, Move a Disc from B to C
+#+end_example
+
+* File Local Varaibles
+  # Local Variables:
+  # org-confirm-babel-evaluate: nil 
+  # End:
+
+  # ;;; -*- org-confirm-babel-evaluate: nil; -*-
+  # Note it seems that need to put this to the end of file...
+  # ok! the above two way can customize the variable in this local file
+  # and we can set the global shared property!
+
+  

@@ -1,0 +1,331 @@
+* Section2
+** company type overview
+
+*** Big4
+
+ - MS
+ - Facebook
+ - Amazon
+ - Apple
+ - Google
+
+They recruit heavily from the top5-10 universities
+
+*** medium size companies
+
+ - may have satellite offices
+ - management structure can possibly be more informal (try to ask about this during my interview)
+
+ - cultures varies greatly between all of them. you can check them from the link below.
+
+   [glassdoor - job search](https://www.glassdoor.com/index.htm)
+
+*** start-ups
+
+ - lower salaries but higher equity (shareholders)
+ - high probability of failure (~90%)
+ - [stockoptioncounsel](http://stockoptioncounsel.com/) some knowledge about equity
+ - will learn a lot
+ - work a lot
+ - people are key at this stage
+
+
+[course alorithm and ds resources](http://nbviewer.jupyter.org/github/jmportilla/Python-for-Algorithms--Data-Structures--and-Interviews/tree/master/)
+
+
+*** well-funded start-ups
+
+- high saleries
+- you can find well-funded startup from [this](https://breakoutlist.com/)
+
+
+** job type overview
+
+*** infrastructure
+
+sysadmin: managing, settings up, and keeping systems running
+dev-ops: creating & using tools that devs use to manage systems
+technical support & documentatino
+database administrators
+
+
+*** backend
+
+full stack engineer: a little bit of everything
+Backend Application
+api
+database
+penetrating test
+software architects
+
+*** frontend
+
+full stack: focus on frontend
+ux/ui
+html,css,js
+
+
+
+*** native
+
+ios, android, windows mobile
+desktop application
+software architecture
+enterprise software development
+
+*** Science and Theory
+
+scientific research(R, ipython)
+pure math research (haskell, lisp)
+data science
+machine learning
+
+
+*** Marketing
+
+growth hacking / web scraping
+seo
+
+
+*** Hardware and Graphics
+
+embedded software
+game developmenet
+IC design
+
+* Section3
+
+
+** resume preparation
+
+
+*** one page resume
+
+you can hove two page if you have more than 10 years experience
+
+*** use resume template with column
+
+you can desgin your own if you're related with design work.
+
+*** use point bullet
+
+show accomplishments
+
+*** accomplishment oriented
+
+what did you build, create, design, optimize, lead, etc.
+
+*** quantify
+
+say numbers about your accomplishments
+
+*** projects
+
+list 3 - 5 projects
+
+show what they are
+
+*** additional experience(optinal)
+
+*** languages and technologies
+
+
+** resume creation tools
+
+*** tool links
+
+- https://www.livecareer.com/
+- https://www.resume.com/
+- https://resumegenius.com/
+- http://www.resumebuilder.org/
+- https://www.visualcv.com/
+- https://hipcv.com/
+- https://cvease.com/pricing
+- http://cvmkr.com/
+
+*** template
+
+- https://drive.google.com/templates?q=resume&ddrp=1#
+- https://templates.office.com/en-us/Resumes-and-Cover-Letters
+
+*** resume check list
+
+ - [example resume](https://www.sharelatex.com/project/55db6ac384d1be370a7d4b9a)
+ - [checklist](https://breakoutlist.com/resume-tool)
+
+*** [an article about interview](http://kolesky.com/datums/job-search/?utm_source=programmingdigest&utm_medium=email&utm_campaign=featured#my-process)
+
+* Section4
+
+** linkedIn
+
+ - [linkedIn Job](https://www.linkedin.com/jobs)
+ 
+
+** github
+
+ - [guide github](https://guides.github.com/)
+ - [training course](https://services.github.com/on-demand/)
+ - [github jobs search tool](https://jobs.github.com/)
+
+** personal website or portfolio
+
+recommend to create your own website if you plan on applying for web related position.
+
+* Section5
+
+** building network
+
+ - members of club
+ - involve network event ex. pycon
+
+* Section6
+
+** job search
+
+keep a record for your job search
+
+[example tracking log](https://docs.google.com/spreadsheets/d/1-Qyvfx57EqlFnu7SXIO46FhaNVjJiaGeiQCfqn_Zci0/template/preview?usp=drive_web)
+
+tracking tool [job hero](https://gojobhero.com/) 
+
+** job search sites
+
+ - [starups jobs](https://angel.co/jobs)
+ - [glassdoor](https://www.glassdoor.com/index.htm)
+ - [linkedIn Job](https://www.linkedin.com/jobs)
+ - [indeed](https://tw.indeed.com/?r=us)
+ - [monster job search](http://www.monster.com.hk/jobs-in-taiwan.html)
+ - [dice job search](http://www.dice.com/)
+
+
+** job related sites
+
+ - [stackoverflow career](https://www.stackoverflowbusiness.com/talent)
+ 
+
+** Company matching sites
+
+ - [hired](https://hired.com/)
+ - [white truffle](https://www.whitetruffle.com/)
+ - [underdog](https://underdog.io/)
+ - [anthology](https://anthology.co/)
+
+* Section 7
+
+** 5 Steps of Interviews
+
+1. preparation
+
+wake up earlier than usual if I have a morning interview
+
+bring extra resumes
+
+2. arrival
+
+arrive 10 to 12 minutes before the scheduled appointment
+
+make sure to visit a restroom beforehand
+
+be aware of my body languages
+
+3. introduction
+
+speak with confidence and energy
+
+determine the interviewer's communication style and adapt it
+
+4. communication
+
+make good use of openings. ex. be asked a quick intro , so give him a minutes self-intro about my career
+
+prepare for common questions
+
+demostrate my ability to adapt and learn
+
+
+5. closing
+
+
+review Salary and Compensation packages
+
+** tough interview questions
+
+use real example from the past
+
+
+Q1. tell me about yourself
+
+時間大概是一分鐘，前半講講過去事蹟，後半講述最近在做什麼或是有什麼事蹟值得講的
+
+Q2. why are you leaving your current position
+
+回答要正向，不要有抱怨，具有什麼目標性～ 想要成長
+
+
+Q3. Why do you want this position
+
+要表現得有自信，裡面最重要的
+
+Q4. Where do you see yourself in 5 years
+
+算是一種自我期許的問題，展現你的目標
+
+Q5. What is your greatest weakness
+
+雖然這題的答案不太會影響到公司對你的評價，但是還是得多少準備一下，通常是講講自己的缺點後，說明自己正在或如何改變這個缺點
+說明這個缺點不會影響到工作！
+
+Q6. What do you know about our company
+
+這題證明了你事前對公司的調查，然後回答你可以對公司有什麼貢獻
+
+Q7. What's the most difficult situation you had to face at a job
+
+2 to 8, 20% for the situation and 80% for the solutions
+重點在於你如何解決這個問題，不要多著墨於遇到的情況
+
+Q8. What do you think makes a successful manager
+
+講一些關於團隊合作的，可能會比較好
+
+** special case questions
+
+Q1. How do you explain the gaps that appeear in your resume
+
+意思是指空窗期吧，為什麼會有這段時間
+
+Q2. Why has it taken you so long to find work
+
+其實跟前面意思很像，總之這邊要好好解釋
+
+Q3. How many positions have you applied for
+
+盡量不要說出精確的數字，要有所保留，你找太多間，就會被懷疑想要進入公司的目標性
+
+* Section 8
+
+** salary negotiations
+
+等公司開口問你薪水要多少時，再開價碼，通常
+
+**relevant salary information**
+
+1. www.salary.com
+2. www.payscale.com
+3. www.glassdoor.com
+
+[how to negotiate your job offer](https://www.youtube.com/watch?v=km2Hd_xgo9Q)
+
+* Section 9
+
+大致介紹接下來techicla interview的課程安排
+
+* Section 10
+
+** interview notebook
+
+**the section after 10 are all about algorithm so I think to use the ipython to take notes is the better choice**
+
+
+

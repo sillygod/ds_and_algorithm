@@ -1,0 +1,14 @@
+* Ds and Algorithms
+  
+Currently, this is notes for the course -- Python for algorithm data structure in Udemy. I will end up these notes to an algorithm camp.
+
+* Todo
+
+ - transfer all ipython notes to emacs org
+
+* References
+
+ - [[https://www.youtube.com/watch?v=s-CYnVz-uh4][Mit course about algorithm]]
+ - [[https://nbviewer.jupyter.org/github/jmportilla/Python-for-Algorithms--Data-Structures--and-Interviews/tree/master][Python-for-algorithms-data-structure]]
+ - https://www.geeksforgeeks.org/
+ - https://www.youtube.com/watch?v=vYquumk4nWw&list=PLBZBJbE_rGRU5PrgZ9NBHJwcaZsNpf8yD
